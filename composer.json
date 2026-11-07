@@ -1,0 +1,33 @@
+{
+    "name": "chari-relais/laravel",
+    "description": "Client Laravel de l'API Chari Relais : relais, prix, envois, suivi et notifications signées.",
+    "version": "1.0.0",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "livraison", "relais", "chari-relais"],
+    "require": {
+        "php": "^8.2",
+        "illuminate/console": "^11.0|^12.0|^13.0",
+        "illuminate/http": "^11.0|^12.0|^13.0",
+        "illuminate/routing": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "phpunit/phpunit": "^11.0|^12.0"
+    },
+    "autoload": {
+        "psr-4": {"ChariRelais\\Laravel\\": "src/"}
+    },
+    "autoload-dev": {
+        "psr-4": {"ChariRelais\\Laravel\\Tests\\": "tests/"}
+    },
+    "extra": {
+        "laravel": {
+            "providers": ["ChariRelais\\Laravel\\ChariServiceProvider"],
+            "aliases": {"Chari": "ChariRelais\\Laravel\\Facades\\Chari"}
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
