@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace ChariRelais\Laravel\Http;
+namespace SciRelais\Laravel\Http;
 
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /** Refuse toute notification non signée, mal signée ou trop ancienne. */
-class VerifyChariSignature
+class VerifySciSignature
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $secret = (string) config('chari.webhook_secret');
-        abort_if($secret === '', 500, 'CHARI_WEBHOOK_SECRET manquant.');
+        $secret = (string) config('sci.webhook_secret');
+        abort_if($secret === '', 500, 'SCI_WEBHOOK_SECRET manquant.');
 
         $parts = [];
-        foreach (explode(',', (string) $request->header('X-Chari-Signature')) as $part) {
+        foreach (explode(',', (string) $request->header('X-Sci-Signature')) as $part) {
             [$name, $value] = array_pad(explode('=', $part, 2), 2, '');
             $parts[$name] = $value;
         }
@@ -27,7 +27,7 @@ class VerifyChariSignature
         // Calculée sur le corps brut : un JSON relu puis réécrit ne donnerait pas la même signature.
         $valid = ctype_digit($time)
             && hash_equals(hash_hmac('sha256', $time.'.'.$request->getContent(), $secret), $signature)
-            && abs(time() - (int) $time) <= (int) config('chari.webhook_tolerance', 300);
+            && abs(time() - (int) $time) <= (int) config('sci.webhook_tolerance', 300);
 
         abort_unless($valid, 401);
 

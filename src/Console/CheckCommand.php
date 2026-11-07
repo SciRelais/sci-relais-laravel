@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace ChariRelais\Laravel\Console;
+namespace SciRelais\Laravel\Console;
 
-use ChariRelais\Laravel\ChariClient;
 use Illuminate\Console\Command;
 use RuntimeException;
+use SciRelais\Laravel\SciClient;
 
 /** Vérifie l'installation : adresse, clé, secret de notification. Ne crée rien et ne débite rien. */
 class CheckCommand extends Command
 {
-    protected $signature = 'chari:check';
+    protected $signature = 'sci:check';
 
-    protected $description = 'Vérifie la connexion à Chari Relais';
+    protected $description = 'Vérifie la connexion à Sci Relais';
 
-    public function handle(ChariClient $chari): int
+    public function handle(SciClient $sci): int
     {
         try {
-            $relays = $chari->relays();
+            $relays = $sci->relays();
         } catch (RuntimeException $e) {
             $this->error($e->getMessage());
 
@@ -27,8 +27,8 @@ class CheckCommand extends Command
 
         $this->info('Connexion réussie : '.count($relays).' relais disponibles.');
 
-        if (blank(config('chari.webhook_secret'))) {
-            $this->warn('CHARI_WEBHOOK_SECRET est vide : les notifications seront refusées.');
+        if (blank(config('sci.webhook_secret'))) {
+            $this->warn('SCI_WEBHOOK_SECRET est vide : les notifications seront refusées.');
         }
 
         return self::SUCCESS;

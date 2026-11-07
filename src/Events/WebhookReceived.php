@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ChariRelais\Laravel\Events;
+namespace SciRelais\Laravel\Events;
 
 /** Toute notification signée, quel que soit son type. Une même notification (même $id) peut arriver deux fois. */
 class WebhookReceived

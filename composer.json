@@ -1,10 +1,10 @@
 {
-    "name": "chari-relais/laravel",
-    "description": "Client Laravel de l'API Chari Relais : relais, prix, envois, suivi et notifications signées.",
+    "name": "sci-relais/laravel",
+    "description": "Client Laravel de l'API Sci Relais : relais, prix, envois, suivi et notifications signées.",
     "version": "1.0.0",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "livraison", "relais", "chari-relais"],
+    "keywords": ["laravel", "livraison", "relais", "sci-relais"],
     "require": {
         "php": "^8.2",
         "illuminate/console": "^11.0|^12.0|^13.0",
@@ -17,15 +17,15 @@
         "phpunit/phpunit": "^11.0|^12.0"
     },
     "autoload": {
-        "psr-4": {"ChariRelais\\Laravel\\": "src/"}
+        "psr-4": {"SciRelais\\Laravel\\": "src/"}
     },
     "autoload-dev": {
-        "psr-4": {"ChariRelais\\Laravel\\Tests\\": "tests/"}
+        "psr-4": {"SciRelais\\Laravel\\Tests\\": "tests/"}
     },
     "extra": {
         "laravel": {
-            "providers": ["ChariRelais\\Laravel\\ChariServiceProvider"],
-            "aliases": {"Chari": "ChariRelais\\Laravel\\Facades\\Chari"}
+            "providers": ["SciRelais\\Laravel\\SciServiceProvider"],
+            "aliases": {"Sci": "SciRelais\\Laravel\\Facades\\Sci"}
         }
     },
     "minimum-stability": "stable",

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace ChariRelais\Laravel\Facades;
+namespace SciRelais\Laravel\Facades;
 
-use ChariRelais\Laravel\ChariClient;
 use Illuminate\Support\Facades\Facade;
+use SciRelais\Laravel\SciClient;
 
 /**
  * @method static array relays(?string $city = null, ?string $country = null)
@@ -15,12 +15,12 @@ use Illuminate\Support\Facades\Facade;
  * @method static array cancelShipment(string $trackingCode)
  * @method static array createReturn(string $trackingCode)
  *
- * @see ChariClient
+ * @see SciClient
  */
-class Chari extends Facade
+class Sci extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return ChariClient::class;
+        return SciClient::class;
     }
 }

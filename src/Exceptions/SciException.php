@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace ChariRelais\Laravel\Exceptions;
+namespace SciRelais\Laravel\Exceptions;
 
 use Illuminate\Http\Client\Response;
 use RuntimeException;
 use Throwable;
 
 /** Refus de l'API. Basez votre logique sur $errorCode (insufficient_credit, no_line…) : il ne change pas, le message si. */
-class ChariException extends RuntimeException
+class SciException extends RuntimeException
 {
     /** @param array<string, mixed> $errors les champs refusés, pour une erreur de validation */
     public function __construct(string $message, public readonly ?string $errorCode = null, public readonly int $status = 0, public readonly array $errors = [], ?Throwable $previous = null)

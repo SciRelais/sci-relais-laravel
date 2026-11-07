@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace ChariRelais\Laravel\Http;
+namespace SciRelais\Laravel\Http;
 
-use ChariRelais\Laravel\Events\ShipmentStatusChanged;
-use ChariRelais\Laravel\Events\WebhookReceived;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use SciRelais\Laravel\Events\ShipmentStatusChanged;
+use SciRelais\Laravel\Events\WebhookReceived;
 
-/** Répond 2xx une fois les écouteurs passés. Si l'un d'eux échoue, Chari Relais réessaiera plus tard. */
+/** Répond 2xx une fois les écouteurs passés. Si l'un d'eux échoue, Sci Relais réessaiera plus tard. */
 class WebhookController
 {
     public function __invoke(Request $request): Response

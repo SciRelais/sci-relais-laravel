@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace ChariRelais\Laravel;
+namespace SciRelais\Laravel;
 
-use ChariRelais\Laravel\Exceptions\ChariConnectionException;
-use ChariRelais\Laravel\Exceptions\ChariException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use RuntimeException;
+use SciRelais\Laravel\Exceptions\SciConnectionException;
+use SciRelais\Laravel\Exceptions\SciException;
 
-/** Appels à l'API Chari Relais. Chaque méthode renvoie le contenu de « data », ou lève une exception. */
-class ChariClient
+/** Appels à l'API Sci Relais. Chaque méthode renvoie le contenu de « data », ou lève une exception. */
+class SciClient
 {
     /** @param array{url?: ?string, key?: ?string, timeout?: int, retries?: int} $config */
     public function __construct(private readonly Factory $http, private readonly array $config) {}
@@ -78,11 +78,11 @@ class ChariClient
             /** @var Response $response */
             $response = $this->request($retry)->{$method}($path, $data);
         } catch (ConnectionException $e) {
-            throw new ChariConnectionException('Chari Relais ne répond pas : '.$e->getMessage(), previous: $e);
+            throw new SciConnectionException('Sci Relais ne répond pas : '.$e->getMessage(), previous: $e);
         }
 
         if ($response->failed()) {
-            throw ChariException::fromResponse($response);
+            throw SciException::fromResponse($response);
         }
 
         return (array) $response->json('data', []);
@@ -93,7 +93,7 @@ class ChariClient
         $url = $this->config['url'] ?? null;
         $key = $this->config['key'] ?? null;
         if (blank($url) || blank($key)) {
-            throw new RuntimeException('Chari Relais : renseignez CHARI_URL et CHARI_KEY dans votre fichier .env.');
+            throw new RuntimeException('Sci Relais : renseignez SCI_URL et SCI_KEY dans votre fichier .env.');
         }
 
         $request = $this->http->baseUrl(rtrim((string) $url, '/').'/api/v1/')
