@@ -72,6 +72,27 @@ Une notification peut arriver deux fois ou dans le désordre : votre traitement 
 
 Changer l'adresse : `SCI_WEBHOOK_PATH`. Pour la configuration complète : `php artisan vendor:publish --tag=sci-config`.
 
+## Plusieurs comptes : une place de marché
+
+Si chaque vendeur de votre application a son propre compte Sci Relais (son crédit, ses factures, ses reversements de contre-remboursement), gardez la clé de chaque vendeur dans votre base, chiffrée, et appelez avec elle :
+
+```php
+$shipment = Sci::forKey($shop->sci_key)->createShipment([...]);
+$price = Sci::forKey($shop->sci_key)->quote([...]);
+```
+
+`SCI_KEY` peut alors rester vide. Vérifier la clé d'un vendeur : `php artisan sci:check --key=…`
+
+Notifications : chaque vendeur a sa propre adresse, avec un identifiant que vous choisissez (lettres, chiffres, `-` et `_`), par exemple `https://votre-appli.example/sci/webhook/boutique-12`. Indiquez-la au coordinateur pour ce compte, avec son secret. Dans un fournisseur de services, dites au paquet comment retrouver le secret :
+
+```php
+use SciRelais\Laravel\Facades\Sci;
+
+Sci::webhookSecretsUsing(fn (string $account): ?string => Shop::where('sci_account', $account)->value('sci_webhook_secret'));
+```
+
+Un compte inconnu, ou une notification signée avec le secret d'un autre compte, est refusé. L'événement porte le compte : `$event->account` (`null` sur l'adresse unique du fichier `.env`).
+
 ## Vos tests
 
 `Http::fake()` suffit :

@@ -18,11 +18,13 @@ class WebhookController
         $type = (string) $request->json('type');
         $occurredAt = (string) $request->json('occurred_at');
         $data = (array) $request->json('data', []);
+        $account = $request->route('account');
+        $account = is_string($account) ? $account : null;
 
-        event(new WebhookReceived($id, $type, $occurredAt, $data));
+        event(new WebhookReceived($id, $type, $occurredAt, $data, $account));
 
         if ($type === 'shipment.status_changed') {
-            event(new ShipmentStatusChanged($id, (string) ($data['tracking_code'] ?? ''), $data['reference'] ?? null, (string) ($data['status'] ?? ''), $occurredAt));
+            event(new ShipmentStatusChanged($id, (string) ($data['tracking_code'] ?? ''), $data['reference'] ?? null, (string) ($data['status'] ?? ''), $occurredAt, $account));
         }
 
         return response()->noContent();

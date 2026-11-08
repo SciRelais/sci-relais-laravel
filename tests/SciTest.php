@@ -174,4 +174,73 @@ final class SciTest extends TestCase
 
         $this->artisan('sci:check')->assertFailed();
     }
+
+    public function test_chaque_vendeur_appelle_avec_sa_propre_cle(): void
+    {
+        Http::fake(['*' => Http::response(['data' => ['tracking_code' => 'SR-1']], 201)]);
+
+        Sci::forKey('7|vendeur-a')->createShipment(['reference' => 'A-1']);
+        Sci::forKey('8|vendeur-b')->createShipment(['reference' => 'B-1']);
+        Sci::createShipment(['reference' => 'C-1']);
+
+        Http::assertSent(fn (Request $r): bool => $r['reference'] === 'A-1' && $r->hasHeader('Authorization', 'Bearer 7|vendeur-a') && $r->url() === 'https://sci.test/api/v1/shipments');
+        Http::assertSent(fn (Request $r): bool => $r['reference'] === 'B-1' && $r->hasHeader('Authorization', 'Bearer 8|vendeur-b'));
+        Http::assertSent(fn (Request $r): bool => $r['reference'] === 'C-1' && $r->hasHeader('Authorization', 'Bearer 1|cle'));
+    }
+
+    public function test_une_cle_de_vendeur_suffit_sans_cle_dans_le_fichier_env(): void
+    {
+        config(['sci.key' => null]);
+        $this->app->forgetInstance(SciClient::class);
+        Sci::clearResolvedInstances();
+        Http::fake(['*' => Http::response(['data' => []])]);
+
+        Sci::forKey('7|vendeur-a')->relays();
+
+        Http::assertSent(fn (Request $r): bool => $r->hasHeader('Authorization', 'Bearer 7|vendeur-a'));
+    }
+
+    public function test_chaque_vendeur_recoit_ses_notifications_avec_son_secret(): void
+    {
+        Event::fake();
+        Sci::webhookSecretsUsing(fn (string $account): ?string => ['boutique-12' => 'secret-12', 'boutique-40' => 'secret-40'][$account] ?? null);
+        $body = json_encode(['id' => 'n2', 'type' => 'shipment.status_changed', 'occurred_at' => '2027-03-10T09:30:00+00:00', 'data' => ['tracking_code' => 'SR-9', 'reference' => 'A', 'status' => 'arrived']]);
+
+        $this->call('POST', '/sci/webhook/boutique-12', [], [], [], $this->signed($body, secret: 'secret-12'), $body)->assertNoContent();
+
+        Event::assertDispatched(ShipmentStatusChanged::class, fn ($e): bool => $e->account === 'boutique-12' && $e->trackingCode === 'SR-9');
+        Event::assertDispatched(WebhookReceived::class, fn ($e): bool => $e->account === 'boutique-12');
+    }
+
+    public function test_un_vendeur_ne_peut_pas_signer_pour_un_autre(): void
+    {
+        Event::fake();
+        Sci::webhookSecretsUsing(fn (string $account): ?string => ['boutique-12' => 'secret-12', 'boutique-40' => 'secret-40'][$account] ?? null);
+        $body = '{"id":"n3","type":"shipment.status_changed","data":{"tracking_code":"SR-9"}}';
+
+        // Le secret d'un autre vendeur, celui du fichier .env, un compte inconnu : tout est refusé.
+        $this->call('POST', '/sci/webhook/boutique-12', [], [], [], $this->signed($body, secret: 'secret-40'), $body)->assertUnauthorized();
+        $this->call('POST', '/sci/webhook/boutique-12', [], [], [], $this->signed($body), $body)->assertUnauthorized();
+        $this->call('POST', '/sci/webhook/inconnue', [], [], [], $this->signed($body, secret: 'secret-12'), $body)->assertUnauthorized();
+        $this->call('POST', '/sci/webhook/boutique.12', [], [], [], $this->signed($body, secret: 'secret-12'), $body)->assertNotFound();
+
+        Event::assertNotDispatched(WebhookReceived::class);
+    }
+
+    public function test_sans_gestion_des_comptes_une_adresse_de_compte_est_refusee(): void
+    {
+        Event::fake();
+        $body = '{"id":"n4","type":"shipment.status_changed"}';
+
+        $this->call('POST', '/sci/webhook/boutique-12', [], [], [], $this->signed($body), $body)->assertUnauthorized();
+        Event::assertNotDispatched(WebhookReceived::class);
+    }
+
+    public function test_verification_de_la_cle_d_un_vendeur(): void
+    {
+        Http::fake(['*' => Http::response(['data' => [['id' => 1]]])]);
+
+        $this->artisan('sci:check', ['--key' => '7|vendeur-a'])->expectsOutputToContain('1 relais')->assertSuccessful();
+        Http::assertSent(fn (Request $r): bool => $r->hasHeader('Authorization', 'Bearer 7|vendeur-a'));
+    }
 }

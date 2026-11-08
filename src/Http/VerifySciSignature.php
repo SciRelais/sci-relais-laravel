@@ -6,6 +6,7 @@ namespace SciRelais\Laravel\Http;
 
 use Closure;
 use Illuminate\Http\Request;
+use SciRelais\Laravel\WebhookSecrets;
 use Symfony\Component\HttpFoundation\Response;
 
 /** Refuse toute notification non signée, mal signée ou trop ancienne. */
@@ -13,8 +14,11 @@ class VerifySciSignature
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $secret = (string) config('sci.webhook_secret');
-        abort_if($secret === '', 500, 'SCI_WEBHOOK_SECRET manquant.');
+        $account = $request->route('account');
+        $secret = app(WebhookSecrets::class)->for(is_string($account) ? $account : null);
+        // Sans compte : l'installation est incomplète. Avec un compte inconnu : quelqu'un essaie une adresse au hasard.
+        abort_if($secret === null && $account === null, 500, 'SCI_WEBHOOK_SECRET manquant.');
+        abort_if($secret === null, 401);
 
         $parts = [];
         foreach (explode(',', (string) $request->header('X-Sci-Signature')) as $part) {

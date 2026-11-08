@@ -1,7 +1,7 @@
 {
     "name": "sci-relais/laravel",
     "description": "Client Laravel de l'API Sci Relais : relais, prix, envois, suivi et notifications signées.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "type": "library",
     "license": "MIT",
     "keywords": ["laravel", "livraison", "relais", "sci-relais"],

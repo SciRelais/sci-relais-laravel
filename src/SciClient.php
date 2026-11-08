@@ -19,6 +19,15 @@ class SciClient
     public function __construct(private readonly Factory $http, private readonly array $config) {}
 
     /**
+     * Le même client, avec la clé d'un autre compte Sci Relais : celle d'un vendeur d'une place de marché, par exemple.
+     * Chaque compte a son crédit, ses factures et ses reversements : l'envoi est débité au compte de cette clé.
+     */
+    public function forKey(string $key): static
+    {
+        return new static($this->http, ['key' => $key] + $this->config);
+    }
+
+    /**
      * @param  string|null  $country  code du pays (CM), ou « all » ; par défaut celui de votre compte
      * @return list<array<string, mixed>>
      */
@@ -93,7 +102,7 @@ class SciClient
         $url = $this->config['url'] ?? null;
         $key = $this->config['key'] ?? null;
         if (blank($url) || blank($key)) {
-            throw new RuntimeException('Sci Relais : renseignez SCI_URL et SCI_KEY dans votre fichier .env.');
+            throw new RuntimeException('Sci Relais : renseignez SCI_URL et SCI_KEY dans votre fichier .env, ou passez la clé du compte avec Sci::forKey().');
         }
 
         $request = $this->http->baseUrl(rtrim((string) $url, '/').'/api/v1/')

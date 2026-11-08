@@ -8,5 +8,5 @@ namespace SciRelais\Laravel\Events;
 class WebhookReceived
 {
     /** @param array<string, mixed> $data */
-    public function __construct(public readonly string $id, public readonly string $type, public readonly string $occurredAt, public readonly array $data) {}
+    public function __construct(public readonly string $id, public readonly string $type, public readonly string $occurredAt, public readonly array $data, public readonly ?string $account = null) {}
 }
