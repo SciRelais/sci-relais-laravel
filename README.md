@@ -4,12 +4,12 @@ Créez et suivez vos envois Sci Relais depuis votre application, et recevez leur
 
 ## Installation
 
-Le paquet n'est pas encore publié sur Packagist. Téléchargez le fichier zip depuis le guide d'intégration de Sci Relais, placez-le dans un dossier `packages/` à la racine de votre application, puis :
-
 ```bash
-composer config repositories.sci artifact ./packages
+composer config repositories.sci-relais vcs https://github.com/SciRelais/sci-relais-laravel
 composer require sci-relais/laravel
 ```
+
+Sans accès à GitHub depuis le serveur : téléchargez le fichier zip depuis le guide d'intégration de Sci Relais, placez-le dans un dossier `packages/` à la racine de votre application, puis `composer config repositories.sci artifact ./packages` et `composer require sci-relais/laravel`.
 
 Dans `.env` :
 
