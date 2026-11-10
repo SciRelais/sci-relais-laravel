@@ -1,6 +1,6 @@
 # Sci Relais pour Laravel
 
-Créez et suivez vos envois Sci Relais depuis votre application, et recevez leurs changements d'état. Laravel 11, 12 ou 13, PHP 8.2 ou plus.
+Créez et suivez vos envois Sci Relais et vos courses Sci Express depuis votre application, et recevez leurs changements d'état. Laravel 11, 12 ou 13, PHP 8.2 ou plus.
 
 ## Installation
 
@@ -55,6 +55,30 @@ Sci::createReturn('SR-7K4M-XP2A');
 
 Mettez toujours une `reference` : répéter l'appel ne crée ni ne débite rien, et le paquet peut réessayer seul après une coupure. Sans référence, une coupure lève `SciConnectionException` : vérifiez avant de recréer l'envoi.
 
+## Sci Express : courses en ville
+
+Un coursier récupère une commande (un repas, par exemple) et la porte au client, dans la même ville. Le prix est débité de votre crédit à la commande et rendu si aucun coursier ne la prend ou si vous annulez avant le départ.
+
+```php
+$price = Sci::expressQuote(['city' => "N'Djamena", 'pickup' => ['lat' => 12.11, 'lng' => 15.04], 'dropoff' => ['lat' => 12.118, 'lng' => 15.043]]);
+
+$run = Sci::createExpressDelivery([
+    'reference' => 'CMD-104',
+    'city' => "N'Djamena",
+    'pickup' => ['name' => 'Le Palmier', 'phone' => '66770011', 'address' => 'Avenue Charles de Gaulle', 'lat' => 12.11, 'lng' => 15.04],
+    'dropoff' => ['name' => 'Awa', 'phone' => '66223344', 'address' => 'Moursal, porte bleue', 'lat' => 12.118, 'lng' => 15.043, 'note' => 'Appeler en arrivant'],
+    'contents' => '2 plats',
+]);
+$run['code'];          // EX-7K4M-XP2A
+$run['tracking_url'];  // page de suivi du client, avec la position du coursier
+$run['delivery_code']; // le client le donne au coursier à la remise (il le reçoit aussi par SMS)
+
+Sci::expressDelivery('EX-7K4M-XP2A');
+Sci::cancelExpressDelivery('EX-7K4M-XP2A');
+```
+
+Sans positions, c'est le forfait de la ville ; une ville sans forfait refuse avec `coordinates_required`. Autres refus : `no_rate`, `too_far`, `insufficient_credit`, `not_cancellable`.
+
 ## Notifications
 
 Le paquet crée la route `POST /sci/webhook` et vérifie la signature. Indiquez `https://votre-appli.example/sci/webhook` au coordinateur, puis écoutez l'événement :
@@ -65,6 +89,16 @@ use Illuminate\Support\Facades\Event;
 
 Event::listen(function (ShipmentStatusChanged $event) {
     Order::where('tracking_code', $event->trackingCode)->update(['sci_status' => $event->status]);
+});
+```
+
+Les courses express ont leur événement, avec le coursier dès qu'il a la course :
+
+```php
+use SciRelais\Laravel\Events\ExpressStatusChanged;
+
+Event::listen(function (ExpressStatusChanged $event) {
+    // $event->code, $event->reference, $event->status (assigned, picked_up, delivered…), $event->courier['name'] ?? null
 });
 ```
 

@@ -6,6 +6,7 @@ namespace SciRelais\Laravel\Http;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use SciRelais\Laravel\Events\ExpressStatusChanged;
 use SciRelais\Laravel\Events\ShipmentStatusChanged;
 use SciRelais\Laravel\Events\WebhookReceived;
 
@@ -25,6 +26,11 @@ class WebhookController
 
         if ($type === 'shipment.status_changed') {
             event(new ShipmentStatusChanged($id, (string) ($data['tracking_code'] ?? ''), $data['reference'] ?? null, (string) ($data['status'] ?? ''), $occurredAt, $account));
+        }
+
+        if ($type === 'express.status_changed') {
+            $courier = $data['courier'] ?? null;
+            event(new ExpressStatusChanged($id, (string) ($data['code'] ?? ''), $data['reference'] ?? null, (string) ($data['status'] ?? ''), is_array($courier) ? $courier : null, $occurredAt, $account));
         }
 
         return response()->noContent();

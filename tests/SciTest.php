@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Orchestra\Testbench\TestCase;
 use RuntimeException;
+use SciRelais\Laravel\Events\ExpressStatusChanged;
 use SciRelais\Laravel\Events\ShipmentStatusChanged;
 use SciRelais\Laravel\Events\WebhookReceived;
 use SciRelais\Laravel\Exceptions\SciConnectionException;
@@ -58,6 +59,10 @@ final class SciTest extends TestCase
         Sci::shipment('SR 1');
         Sci::cancelShipment('SR-1');
         Sci::createReturn('SR-1');
+        Sci::expressQuote(['city' => "N'Djamena"]);
+        Sci::createExpressDelivery(['city' => "N'Djamena"]);
+        Sci::expressDelivery('EX-7K4M-XP2A');
+        Sci::cancelExpressDelivery('EX-7K4M-XP2A');
 
         $sent = Http::recorded()->map(fn (array $pair): string => $pair[0]->method().' '.$pair[0]->url())->all();
         $this->assertSame([
@@ -66,6 +71,10 @@ final class SciTest extends TestCase
             'GET https://sci.test/api/v1/shipments/SR%201',
             'DELETE https://sci.test/api/v1/shipments/SR-1',
             'POST https://sci.test/api/v1/shipments/SR-1/return',
+            'POST https://sci.test/api/v1/express/quotes',
+            'POST https://sci.test/api/v1/express/deliveries',
+            'GET https://sci.test/api/v1/express/deliveries/EX-7K4M-XP2A',
+            'DELETE https://sci.test/api/v1/express/deliveries/EX-7K4M-XP2A',
         ], $sent);
     }
 
@@ -146,6 +155,18 @@ final class SciTest extends TestCase
 
         Event::assertDispatched(ShipmentStatusChanged::class, fn ($e): bool => $e->trackingCode === 'SR-1' && $e->status === 'arrived' && $e->reference === 'A' && $e->id === 'n1');
         Event::assertDispatched(WebhookReceived::class);
+    }
+
+    public function test_notification_d_une_course_express(): void
+    {
+        Event::fake();
+        $body = json_encode(['id' => 'n2', 'type' => 'express.status_changed', 'occurred_at' => '2027-03-10T09:30:00+00:00',
+            'data' => ['code' => 'EX-7K4M-XP2A', 'reference' => 'R-1', 'status' => 'assigned', 'courier' => ['name' => 'Issa', 'phone' => '+23566550000', 'vehicle' => 'moto']]]);
+
+        $this->call('POST', '/sci/webhook', [], [], [], $this->signed($body), $body)->assertNoContent();
+
+        Event::assertDispatched(ExpressStatusChanged::class, fn ($e): bool => $e->code === 'EX-7K4M-XP2A' && $e->status === 'assigned' && $e->reference === 'R-1' && $e->courier['name'] === 'Issa');
+        Event::assertNotDispatched(ShipmentStatusChanged::class);
     }
 
     public function test_notification_refusee_si_fausse_absente_ou_ancienne(): void

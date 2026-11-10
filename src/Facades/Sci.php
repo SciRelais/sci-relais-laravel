@@ -16,6 +16,10 @@ use SciRelais\Laravel\WebhookSecrets;
  * @method static array shipment(string $trackingCode)
  * @method static array cancelShipment(string $trackingCode)
  * @method static array createReturn(string $trackingCode)
+ * @method static array expressQuote(array $input)
+ * @method static array createExpressDelivery(array $input)
+ * @method static array expressDelivery(string $code)
+ * @method static array cancelExpressDelivery(string $code)
  * @method static SciClient forKey(string $key)
  *
  * @see SciClient

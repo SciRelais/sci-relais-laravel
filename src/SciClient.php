@@ -78,6 +78,41 @@ class SciClient
     }
 
     /**
+     * Sci Express, prix d'une course en ville, sans rien créer.
+     *
+     * @param  array<string, mixed>  $input  city, et si connues pickup{lat,lng} et dropoff{lat,lng} (sinon : forfait de la ville)
+     * @return array<string, mixed> price{amount, currency}, distance_m…
+     */
+    public function expressQuote(array $input): array
+    {
+        return $this->call('post', 'express/quotes', $input, retry: true);
+    }
+
+    /**
+     * Commande une course express et débite votre crédit (rendu si aucun coursier ne la prend ou si vous l'annulez avant
+     * le départ). Avec une « reference », répéter l'appel renvoie la course existante : seul cet appel est réessayé.
+     *
+     * @param  array<string, mixed>  $input  reference, city, pickup{name,phone,address,lat,lng}, dropoff{name,phone,address,lat,lng,note}, contents, recipient_locale
+     * @return array<string, mixed> code, status, price, delivery_code, tracking_url, courier…
+     */
+    public function createExpressDelivery(array $input): array
+    {
+        return $this->call('post', 'express/deliveries', $input, retry: filled($input['reference'] ?? null));
+    }
+
+    /** @return array<string, mixed> la course, son coursier (et sa position pendant la course) et son historique dans « events » */
+    public function expressDelivery(string $code): array
+    {
+        return $this->call('get', 'express/deliveries/'.rawurlencode($code), retry: true);
+    }
+
+    /** @return array<string, mixed> Annule tant que le coursier n'est pas parti avec la commande ; ensuite : erreur not_cancellable. */
+    public function cancelExpressDelivery(string $code): array
+    {
+        return $this->call('delete', 'express/deliveries/'.rawurlencode($code));
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @return array<mixed>
      */
